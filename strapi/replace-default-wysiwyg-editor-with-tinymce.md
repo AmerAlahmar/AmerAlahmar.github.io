@@ -47,7 +47,7 @@ npx create-strapi-app my-app --quickstart
 
 After running the command, a new browser tab should be opened for you to create a new adminstration account. If it didn't, head to [localhost:1337/admin](localhost:1337/admin) and fill all the necessarily information.
 
-![Register Adminstration Account]()
+![Register Adminstration Account](https://github.com/AmerAlahmar/AmerAlahmar.github.io/blob/main/strapi/images/register-admin-acount.png?raw=true)
 
 
 ##### 2. Generate a plugin:
@@ -482,32 +482,39 @@ That was boring, wasn't it? Now let's have fun and see some result! Let's run st
 
 When you run the last command, it will open a new tab in the browser (if it didn't, head to [localhost:8000/admin](localhost:8000/admin)) and login with the administrator account you cerated earlier.
 
-![Login Page]()
+![Login Page](https://github.com/AmerAlahmar/AmerAlahmar.github.io/blob/main/strapi/images/login-page.png?raw=true)
 
 From the menu on the left go to `Content-Types Builder` so we can create a new content for testing.
 
-![Register Adminstration Account]()
+![Chose Content-Types From The Left Menu](https://github.com/AmerAlahmar/AmerAlahmar.github.io/blob/main/strapi/images/goto-content-types-builder.png?raw=true)
 
 Chose `Create new single type`
 
-![Chose Create New Single Type]()
+![Chose Create New Single Type](https://github.com/AmerAlahmar/AmerAlahmar.github.io/blob/main/strapi/images/chose-create-new-single-type.png?raw=true)
 
 Enter display name something like `Tinymce Test`.
 
-![Name it Tinymce Test]()
+![Name it Tinymce Test](https://github.com/AmerAlahmar/AmerAlahmar.github.io/blob/main/strapi/images/enter-display-name-tinymce-test.png?raw=true)
 
-Chose Rich Text and give it a name like `Test`.
+Chose Rich Text.
 
-![Chose Rich Text And Name it Test]()
+![Chose Rich Text](https://github.com/AmerAlahmar/AmerAlahmar.github.io/blob/main/strapi/images/chose-rich-text.png?raw=true)
 
-Hit `Finish` and then from the top right hit `Save`, and wait for the server to restart.
 
-![Click Finish]()
-![Click Save]()
+ Give it a name like `Test` and hit `Finish`.
+![Name it Test](https://github.com/AmerAlahmar/AmerAlahmar.github.io/blob/main/strapi/images/name-field-test-and-finish.png?raw=true)
+
+
+From the top right corner hit `Save`, and wait for the server to restart
+
+![Click Save](https://github.com/AmerAlahmar/AmerAlahmar.github.io/blob/main/strapi/images/click-save.png?raw=true)
+
+![Click Save](https://github.com/AmerAlahmar/AmerAlahmar.github.io/blob/main/strapi/images/wait-for-server-restart.png?raw=true)
+
 
 Ok, to the moment of truth. In the left menu you will find the new created content `Tinymce Test`, press it to edit it. And hop!, there you go, Tinymce is working! Yaaay :heart_eyes: 
 
-![Observe Tinymce Is Broken]()
+![Observe Tinymce Is Broken](https://github.com/AmerAlahmar/AmerAlahmar.github.io/blob/main/strapi/images/tinymce-is-broken.png?raw=true)
 
 Hmm :confused:, something isn't quite right yet! You are probably not able to insert a new line or do pretty much anything useful! Let's stop strapi and deal with it. Press `Ctrl+C` or `Command+C` to stop it.
 
@@ -566,4 +573,4 @@ strapi develop
 
 When Strapi is ready, go back to our `Tinymce Test` and give it another try, everything should be working fine :satisfied:.
 
-![Observe Tinymce Is Working]()
+![Observe Tinymce Is Working](https://github.com/AmerAlahmar/AmerAlahmar.github.io/blob/main/strapi/images/tinymce-is-working.png?raw=true)
