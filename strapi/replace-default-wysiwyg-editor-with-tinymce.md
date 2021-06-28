@@ -47,6 +47,8 @@ npx create-strapi-app my-app --quickstart
 
 After running the command, a new browser tab should be opened for you to create a new adminstration account. If it didn't, head to [localhost:1337/admin](localhost:1337/admin) and fill all the necessarily information.
 
+![Register Adminstration Account]()
+
 
 ##### 2. Generate a plugin:
    
@@ -147,7 +149,74 @@ mkdir -p components/Tinymce/; touch components/Tinymce/index.js
   ```
   And paste the following code then save:
   ```js
-  MEDILIB CODE
+  import React, { useEffect, useState } from 'react';
+  import { useStrapi, prefixFileUrlWithBackendUrl } from 'strapi-helper-plugin';
+  import PropTypes from 'prop-types';
+
+  const MediaLib = ({ isOpen, onChange, onToggle }) => {
+    const {
+      strapi: {
+        componentApi: { getComponent },
+      },
+    } = useStrapi();
+    const [data, setData] = useState(null);
+    const [isDisplayed, setIsDisplayed] = useState(false);
+
+    useEffect(() => {
+      if (isOpen) {
+        setIsDisplayed(true);
+      }
+    }, [isOpen]);
+
+    const Component = getComponent('media-library').Component;
+
+    const handleInputChange = data => {
+      if (data) {
+        const { url } = data;
+
+        setData({ ...data, url: prefixFileUrlWithBackendUrl(url) });
+      }
+    };
+
+    const handleClosed = () => {
+      if (data) {
+        onChange(data);
+      }
+
+      setData(null);
+      setIsDisplayed(false);
+    };
+
+    if (Component && isDisplayed) {
+      return (
+        <Component
+          allowedTypes={['images', 'videos', 'files']}
+          isOpen={isOpen}
+          multiple={false}
+          noNavigation
+          onClosed={handleClosed}
+          onInputMediaChange={handleInputChange}
+          onToggle={onToggle}
+        />
+      );
+    }
+
+    return null;
+  };
+
+  MediaLib.defaultProps = {
+    isOpen: false,
+    onChange: () => {},
+    onToggle: () => {},
+  };
+
+  MediaLib.propTypes = {
+    isOpen: PropTypes.bool,
+    onChange: PropTypes.func,
+    onToggle: PropTypes.func,
+  };
+
+  export default MediaLib;
   ``` 
   <br/>
 
@@ -160,7 +229,102 @@ mkdir -p components/Tinymce/; touch components/Tinymce/index.js
   And paste the following code:
   **Note:** If you get `file not found` error around the `import TinyEditor...` Ignore it for now as we will create it in the next step.
   ```js
-  WYSIWYG CODE
+  import React, { useState } from 'react';
+  import PropTypes from 'prop-types';
+  import { isEmpty } from 'lodash';
+  import { Button } from '@buffetjs/core';
+  import { Label, InputDescription, InputErrors } from 'strapi-helper-plugin';
+  import MediaLib from '../MediaLib';
+  import TinyEditor from '../Tinymce';
+
+  const Wysiwyg = ({
+    inputDescription,
+    errors,
+    label,
+    name,
+    noErrorsDescription,
+    onChange,
+    value,
+  }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    let spacer = !isEmpty(inputDescription) ? <div style={{ height: '.4rem' }} /> : <div />;
+
+    if (!noErrorsDescription && !isEmpty(errors)) {
+      spacer = <div />;
+    }
+
+    const handleChange = data => {
+      if (data.mime.includes('image')) {
+        const imgTag = `<p><img src="${data.url}" caption="${data.caption}" alt="${data.alternativeText}"></img></p>`;
+        const newValue = value ? `${value}${imgTag}` : imgTag;
+
+        onChange({ target: { name, value: newValue } });
+      }
+
+      // Handle videos and other type of files by adding some code
+    };
+
+    const handleToggle = () => setIsOpen(prev => !prev);
+
+    return (
+      <div
+        style={{
+          marginBottom: '1.6rem',
+          fontSize: '1.3rem',
+          fontFamily: 'Lato',
+        }}
+      >
+        <Label htmlFor={name} message={label} style={{ marginBottom: 10 }} />
+        <div>
+          <Button color="primary" onClick={handleToggle}>
+            MediaLib
+          </Button>
+        </div>
+        <TinyEditor name={name} onChange={onChange} value={value} />
+        <InputDescription
+          message={inputDescription}
+          style={!isEmpty(inputDescription) ? { marginTop: '1.4rem' } : {}}
+        />
+        <InputErrors errors={(!noErrorsDescription && errors) || []} name={name} />
+        {spacer}
+        <MediaLib onToggle={handleToggle} isOpen={isOpen} onChange={handleChange} />
+      </div>
+    );
+  };
+
+  Wysiwyg.defaultProps = {
+    errors: [],
+    inputDescription: null,
+    label: '',
+    noErrorsDescription: false,
+    value: '',
+  };
+
+  Wysiwyg.propTypes = {
+    errors: PropTypes.array,
+    inputDescription: PropTypes.oneOfType([
+      PropTypes.string,
+      PropTypes.func,
+      PropTypes.shape({
+        id: PropTypes.string,
+        params: PropTypes.object,
+      }),
+    ]),
+    label: PropTypes.oneOfType([
+      PropTypes.string,
+      PropTypes.func,
+      PropTypes.shape({
+        id: PropTypes.string,
+        params: PropTypes.object,
+      }),
+    ]),
+    name: PropTypes.string.isRequired,
+    noErrorsDescription: PropTypes.bool,
+    onChange: PropTypes.func.isRequired,
+    value: PropTypes.string,
+  };
+
+  export default Wysiwyg;
   ``` 
 - ###### Tinymce/index.js
   This is where all the work is done, it's the file that will actually implement the editor
@@ -172,7 +336,35 @@ mkdir -p components/Tinymce/; touch components/Tinymce/index.js
   And paste the following code:
   **Note:** Make sure to replace `API_KEY` with your actual key that you obtained from Tinymce.
   ```js
-  TINYMCE CODE
+  import React from "react";
+  import PropTypes from "prop-types";
+  import { Editor } from "@tinymce/tinymce-react";
+
+  const TinyEditor = ({ onChange, name, value }) => {
+
+    return (
+      <Editor
+        apiKey="API KEY"
+        value={value}
+        tagName={name}
+        onEditorChange={(editorContent) => {
+          onChange({ target: { name, value: editorContent } });
+        }}
+        outputFormat='text'
+        init={{}}
+      />
+    );
+  };
+
+
+  TinyEditor.propTypes = {
+    onChange: PropTypes.func.isRequired,
+    name: PropTypes.string.isRequired,
+    value: PropTypes.string,
+  };
+
+  export default TinyEditor;
+
   ```
 
 ##### 5. Register the field and the plugin:
@@ -186,7 +378,33 @@ nano index.js
 ```
 Delete the existing code and add the following:
 ```js
-REGISTRATION CODE
+import pluginPkg from '../../package.json';
+import pluginId from './pluginId';
+import Wysiwyg from './components/Wysiwyg';
+
+export default strapi => {
+  const pluginDescription = pluginPkg.strapi.description || pluginPkg.description;
+  const icon = pluginPkg.strapi.icon;
+  const name = pluginPkg.strapi.name;
+
+  const plugin = {
+    blockerComponent: null,
+    blockerComponentProps: {},
+    description: pluginDescription,
+    icon,
+    id: pluginId,
+    injectedComponents: [],
+    isReady: true,
+    isRequired: pluginPkg.strapi.required || false,
+    mainComponent: null,
+    name,
+    preventComponentRendering: false,
+    trads: {},
+  };
+
+  strapi.registerField({ type: 'wysiwyg', Component: Wysiwyg });
+  return strapi.registerPlugin(plugin);
+};
 ```
 
 ##### 6. Run Strapi:
@@ -264,28 +482,34 @@ That was boring, wasn't it? Now let's have fun and see some result! Let's run st
 
 When you run the last command, it will open a new tab in the browser (if it didn't, head to [localhost:8000/admin](localhost:8000/admin)) and login with the administrator account you cerated earlier.
 
-<<<<<<<<<<<<<PICTURE>>>>>>>>>>>>>
+![Login Page]()
 
 From the menu on the left go to `Content-Types Builder` so we can create a new content for testing.
 
-<<<<<<<<<<<<<PICTURE>>>>>>>>>>>>>
+![Register Adminstration Account]()
 
 Chose `Create new single type`
-<<<<<<<<<<<<<PICTURE>>>>>>>>>>>>>
+
+![Chose Create New Single Type]()
 
 Enter display name something like `Tinymce Test`.
-<<<<<<<<<<<<<PICTURE>>>>>>>>>>>>>
 
-Chose Rich Text and give it a name like `test`.
-<<<<<<<<<<<<<PICTURE>>>>>>>>>>>>>
+![Name it Tinymce Test]()
+
+Chose Rich Text and give it a name like `Test`.
+
+![Chose Rich Text And Name it Test]()
 
 Hit `Finish` and then from the top right hit `Save`, and wait for the server to restart.
-<<<<<<<<<<<<<PICTURE>>>>>>>>>>>>>
+
+![Click Finish]()
+![Click Save]()
 
 Ok, to the moment of truth. In the left menu you will find the new created content `Tinymce Test`, press it to edit it. And hop!, there you go, Tinymce is working! Yaaay :heart_eyes: 
-<<<<<<<<<<<<<PICTURE>>>>>>>>>>>>>
 
-Hmm, something isn't quite right yet! You are probably not able to insert a new line or do pretty much anything useful! Let's stop strapi and deal with it. Press `Ctrl+C` or `Command+C` to stop it.
+![Observe Tinymce Is Broken]()
+
+Hmm :confused:, something isn't quite right yet! You are probably not able to insert a new line or do pretty much anything useful! Let's stop strapi and deal with it. Press `Ctrl+C` or `Command+C` to stop it.
 
 Remember The file we marked? In that file, we need to configure Tinymce to work for us. we need to tell Tinymce `three` important things.
 
@@ -309,33 +533,37 @@ And do the following changes:
   **Note:** Add all the plugins you want between the single quotes `' HERE '` and separate them with single spaces, [A full list can be found here](https://www.tiny.cloud/docs/plugins/opensource/), Remember not to add any plugin tat allows users to upload the media directly to the editor.
 
 When you are done, Re-build Strapi and start it again:
-  :::: tabs
+:::: tabs
 
-  ::: tab yarn
+::: tab yarn
 
-  ```
-  yarn build
-  yarn develop --watch-admin
-  ```
+```
+yarn build
+yarn develop
+```
 
-  :::
+:::
 
-  ::: tab npm
+::: tab npm
 
-  ```
-  npm run build
-  npm run develop -- --watch-admin
-  ```
+```
+npm run build
+npm run develop
+```
 
-  :::
+:::
 
-  ::: tab strapi
+::: tab strapi
 
-  ```
-  strapi build
-  strapi develop --watch-admin
-  ```
+```
+strapi build
+strapi develop
+```
 
-  :::
+:::
 
-  ::::
+::::
+
+When Strapi is ready, go back to our `Tinymce Test` and give it another try, everything should be working fine :satisfied:.
+
+![Observe Tinymce Is Working]()
